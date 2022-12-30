@@ -1,0 +1,9 @@
+
+- name: Copy Installation file  files from source to devs
+  hosts: devs
+  tasks:
+  - name: copy file from source to devs
+    copy:
+      src: root@10.16.1.66:/root/rpmbuild/RPMS/noarch/AheevaAgentApplication-8.6-1_28-Dec-2022.noarch.rpm
+      dest: /usr/src/aheeva/Aheeva_v8.6/AheevaAgentApplication
+      remote_src: true

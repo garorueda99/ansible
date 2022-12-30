@@ -1,0 +1,72 @@
+
+- name: Update server module
+  hosts: devs
+  become: true
+  vars:
+    log_path_root: "/var/log"
+    log_path_aheeva: "/var/log/aheevaccs"
+    log_path_pm2: "/root/.pm2/logs"
+    installation_path: "/usr/src/aheeva"
+    ssh_password: 
+  tasks:
+    - name: disk usage before cleaning
+      shell: df -h
+      register: disk_usage_after
+    - name: Flush PM2 logs
+      command: pm2 flush  
+    - name: Find log files root YYYYMMDD "{{log_path_root}}"
+      find:
+        paths: "{{ log_path_root }}"
+        use_regex: yes
+        patterns: '.*[0-9]{8}'
+      register: log_files
+    - name: Delete log files YYYYMMDD "{{log_path_root}}"
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ log_files.files }}"
+    - name: Find log files root "{{log_path_root}}"
+      find:
+        paths: "{{ log_path_root }}"
+        patterns: '*.log*'
+      register: log_files
+    - name: Delete log files root "{{log_path_root}}"
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ log_files.files }}"
+    - name: Find log files aheeva "{{log_path_aheeva}}"
+      find:
+        paths: "{{ log_path_aheeva }}"
+        patterns: '*.log'
+        recurse: yes
+      register: log_files
+    - name: Delete log files aheeva "{{log_path_aheeva}}"
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ log_files.files }}"
+    - name: Find log files aheeva pm2 "{{log_path_pm2}}"
+      find:
+        paths: "{{log_path_pm2}}"
+        patterns: '*.log'
+        recurse: yes
+      register: log_files
+    - name: Delete log files pm2 "{{log_path_pm2}}"
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ log_files.files }}"
+    - name: Delete content & directory "{{ installation_path }}"
+      file:
+        state: absent
+        path: "{{ installation_path }}"
+    - name: Print disk usage before cleaning
+      debug:
+        var: disk_usage_after
+    - name: disk usage after cleaning
+      shell: df -h
+      register: disk_usage
+    - name: Print disk usage after cleaning
+      debug:
+        var: disk_usage
